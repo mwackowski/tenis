@@ -16,7 +16,10 @@ import java.util.List;
 @RequestMapping("api/game")
 @CrossOrigin
 public class GameApi {
-
+    /**
+     * JAVADOC TEST
+     */
+//tekst
     private GameManager gameManager;
     private PlayerManager playerManager;
     private GroupManager groupManager;
