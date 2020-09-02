@@ -12,20 +12,45 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * <h3>Klasa definiująca możliwe do realizacji żądania protkołu HTTP dla klasy Game</h3>
+ * <p>RestController - Adnotacja łącząca @Controller i @ResponseBody, umożliwiająca rezygnację z adnotowania każdej metody żądania z użyciem @ResponseBody</p>
+ * <p>RequestMapping - Definicja węzła końcowego klasy</p>
+ * <p>CrossOrigin - Protokół żądania klient - API, umożliwiający skonsumowanie API przez klienta z innej domeny </p>
+ */
 @RestController
 @RequestMapping("api/game")
 @CrossOrigin
 public class GameApi {
-    /**
-     * JAVADOC TEST
+    /***
+     * Obiekt klasy GameManager
      */
-//tekst
     private GameManager gameManager;
+    /***
+     * Obiekt klasy PlayerManager
+     */
     private PlayerManager playerManager;
+    /***
+     * Obiekt klasy GroupManager
+     */
     private GroupManager groupManager;
+    /***
+     * Obiekt klasy ScoreManager
+     */
     private ScoreManager scoreManager;
+    /***
+     * Obiekt klasy StatManager
+     */
     private StatManager statManager;
 
+    /***
+     * <h3>Konstruktor przyjmujący jako parametr obiekty każdej z klas pakietu service:</h3>
+     * @param gameManager obiekt klasy GameManager
+     * @param playerManager obiekt klasy PlayerManager
+     * @param groupManager obiekt klasy GroupManager
+     * @param scoreManager obiekt klasy ScoreManager
+     * @param statManager obiekt klasy StatManager
+     */
     public GameApi(GameManager gameManager, PlayerManager playerManager, GroupManager groupManager, ScoreManager scoreManager, StatManager statManager) {
         this.gameManager = gameManager;
         this.playerManager = playerManager;
@@ -34,6 +59,12 @@ public class GameApi {
         this.statManager = statManager;
     }
 
+    /***
+     * <h3>Metoda kasująca grę z bazy</h3>
+     * <p>Adnotacja DeleteMapping umożliwia zmapowanie żądania DELETE dla protokołu HTTP wewnątrz metody</p>
+     * @param id identyfikator gry (klasa-encja Game) do wykasowania
+     * @return informacja zwrotna w postaci odpowiedzi HTTP
+     */
     @DeleteMapping
     public ResponseEntity<String> deleteGameById(@RequestParam Long id){
         gameManager.deleteById(id);
@@ -41,7 +72,13 @@ public class GameApi {
     }
 
 
-
+    /***
+     * <h3>Metoda zmieniająca wygranego danego meczu</h3>
+     * <p>Adnotacja PatchMapping umożliwia zmapowanie żądania PATCH dla protokołu HTTP wewnątrz metody</p>
+     * @param id identyfikator gry (klasa-encja Game) do zmiany
+     * @param winnerId identyfikator Gracza (klasa Player)
+     * @return informacja zwrotna w postaci odpowiedzi HTTP z danymi zwycięzcy
+     */
     @PatchMapping("{id}/winner={winnerId}")
     public ResponseEntity<String> changeWinner(@PathVariable Long id, @PathVariable Long winnerId){
         Game game = gameManager.findById(id).get();
@@ -53,6 +90,15 @@ public class GameApi {
         return ResponseEntity.ok().body("Zwycięzca meczu został zmieniony na zawodnika: "+winner.getName()+" "+winner.getSurname());
     }
 
+    // czy ta metoda tylko zmienia? nie widzę uzycia setera, jest metoda add()
+    /***
+     * <h3>Metoda zmieniająca zawodników w danej grze</h3>
+     * <p>Adnotacja PatchMapping umożliwia zmapowanie żądania PATCH dla protokołu HTTP wewnątrz metody</p>
+     * @param id identyfikator gry (klasa-encja Game), dla której nastąpi zmiana zawodników
+     * @param player1Id identyfikator pierwszego zawodnika (klasa-encja Player)
+     * @param player2Id identtyfikator drugiego zawodnika (klasa-encja Player)
+     * @return informacja zwrotna w postaci odpowiedzi HTTP z danymi graczy po zmianie
+     */
     @PatchMapping("{id}/players={player1Id}vs{player2Id}")
     public ResponseEntity<String> changePlayers(@PathVariable Long id, @PathVariable Long player1Id, @PathVariable Long player2Id){
         Game game = gameManager.findById(id).get();
@@ -66,6 +112,13 @@ public class GameApi {
                         " vs "+player2.getName()+" "+player2.getSurname());
     }
 
+    /***
+     * <h3>Metoda zmieniająca datę rozgrywki</h3>
+     * <p>Adnotacja PatchMapping umożliwia zmapowanie żądania PATCH dla protokołu HTTP wewnątrz metody</p>
+     * @param id identyfikator gry (klasa-encja Game), dla której nastąpi zmiana daty
+     * @param localDate docelowa data gry
+     * @return informacja zwrotna w postaci odpowiedzi HTTP z datą meczu po zmianie
+     */
     @PatchMapping("{id}/date={date}")
     public ResponseEntity<String> changeDate(@PathVariable Long id, @PathVariable("date") @DateTimeFormat(pattern = "yyyy-MM-dd")  LocalDate localDate){
         Game game = gameManager.findById(id).get();
@@ -75,6 +128,12 @@ public class GameApi {
                 "Zmieniono datę meczu. Aktualna data to: " +localDate);
     }
 
+    /***
+     * <h3>Metoda szukająca obiektu klasy GameModel</h3>
+     * <p>Adnotacja GetMapping umożliwia zmapowanie żądania GET dla protokołu HTTP wewnątrz metody</p>
+     * @param id identyfikator gry (klasa-encja Game), będący równocześnie identyfikatorem klasy GameModel
+     * @return zwrot obiektu klasy GameModel
+     */
     @GetMapping("{id}")
     public GameModel findGameById(@PathVariable Long id){
         Game game = gameManager.findById(id).get();
@@ -92,6 +151,20 @@ public class GameApi {
         return gameModel;
     }
 
+    /***
+     * <h3>Metoda wprowadzająca wyniki w przypadku rozgrywania 3 setów w danym meczu</h3>
+     * <p>Adnotacja PostMapping umożliwia zmapowanie żądania POST dla protokołu HTTP wewnątrz metody</p>
+     * @param id identyfikator gry (klasa-encja Game), dla której wprowadzone będą wyniki
+     * @param set1player1 punkty zawodnika 1 w secie 1
+     * @param set1player2 punkty zawodnika 2 w secie 1
+     * @param set2player1 punkty zawodnika 1 w secie 2
+     * @param set2player2 punkty zawodnika 2 w secie 2
+     * @param set3player1 punkty zawodnika 1 w secie 3
+     * @param set3player2 punkty zawodnika 2 w secie 3
+     * @param winnerId identyfikator zawodnika (klasa-encja Player) - zwycięzcy meczu
+     * @param groupId identyfikator grupy (klasa-encja TennisGroup), w ramach której odbyła się rozgrywka
+     * @return informacja zwrotna w postaci odpowiedzi HTTP z liczbą rozegranych setów oraz danymi zwycięzcy
+     */
     @PostMapping("{id}/scores3={set1player1}-{set1player2}-{set2player1}-{set2player2}-{set3player1}-{set3player2}/winner={winnerId}/group={groupId}")
     public ResponseEntity<String> addScoresToGameThree(@PathVariable Long id,
                                                   @PathVariable int set1player1, @PathVariable int set1player2,
@@ -148,6 +221,18 @@ public class GameApi {
         return ResponseEntity.ok().body("Wyniki meczu zostały dodane. Liczba rozegranych setów:"+scores.size()+ "Zawodnik " + winner.getName()+winner.getSurname()+" wygrał zdobywając 2 punkty.");
     }
 
+    /***
+     * <h3>Metoda wprowadzająca wyniki w przypadku rozgrywania 2 setów w danym meczu</h3>
+     * <p>Adnotacja PostMapping umożliwia zmapowanie żądania POST dla protokołu HTTP wewnątrz metody</p>
+     * @param id identyfikator gry (klasa-encja Game), dla której wprowadzone będą wyniki
+     * @param set1player1 punkty zawodnika 1 w secie 1
+     * @param set1player2 punkty zawodnika 2 w secie 1
+     * @param set2player1 punkty zawodnika 1 w secie 2
+     * @param set2player2 punkty zawodnika 2 w secie 2
+     * @param winnerId identyfikator zawodnika (klasa-encja Player) - zwycięzcy meczu
+     * @param groupId identyfikator grupy (klasa-encja TennisGroup), w ramach której odbyła się rozgrywka
+     * @return informacja zwrotna w postaci odpowiedzi HTTP z liczbą rozegranych setów oraz danymi zwycięzcy
+     */
     @PostMapping("{id}/scores={set1player1}-{set1player2}-{set2player1}-{set2player2}/winner={winnerId}/group={groupId}")
     public ResponseEntity<String> addScoresToGame(@PathVariable Long id,
                                                   @PathVariable int set1player1, @PathVariable int set1player2,
